@@ -61,7 +61,7 @@ mi_scores = mi_scores.sort_values(ascending=True)
 # Visualize MI scores
 plt.figure()
 plt.rcParams.update({'font.size': 18})
-mi_scores.plot.barh(figsize=(20,12),title='Mutual Information Scores')
+mi_scores.plot.barh(figsize=(18,10),title='Mutual Information Scores')
 plt.show()
 
 # Split the train set and validation set
@@ -165,5 +165,14 @@ np.random.seed(seed=42)
 idx = int(np.random.rand()*len(X_full))
 rand_row = X_full.iloc[idx,]
 rand_pred = rf_reg.predict(scaler.transform(np.array(rand_row).reshape(1,-1)))
-print(rand_row)
+
+# Plot the prediction
+df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],\
+'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
+    index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
+plt.figure()
+plt.rcParams.update({'font.size': 18})
+ax = df_newcase.plot.barh(figsize=(18,10))
+plt.text(y=4,x=65,s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
+plt.show()
 print('\nThe predicted number of daily rentals is',int(rand_pred[0]))
