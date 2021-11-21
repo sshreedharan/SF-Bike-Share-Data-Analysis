@@ -18,13 +18,13 @@
 #   linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
 #   random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
 #   neural_network_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
-#   predict_data(reg,X)
-#   full_model(df_trip, df_weather, visual=False)
+#   predict_data(reg,X,scaler,visual)
+#   full_model(df_trip,df_weather,visual,less_features)
 #
 # To run all parts of this file, call
-#   full_model(df_trip,df_weather,visual=True),
+#   full_model(df_trip,df_weather,visual,less_features),
 #   where df_trip is trip pd.DataFrame and df_weather is weather pd.DataFrame.
-#   Set visual=True to output all the data visualizations.
+#   It is recommended to set visual=True and less_features=False.
 
 
 import pandas as pd
@@ -94,7 +94,7 @@ def mutual_info_scores(X,Y):
     assert(type(Y)==pd.Series)
 
     # Short representations for colunms' names in X:
-    #   TEMP -> tempurature
+    #   TEMP -> temperature
     #   DWPNT -> Dew Point
     #   HUM -> Humidity
     #   SLP -> Sea Level Pressure
@@ -186,8 +186,8 @@ def linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
     lin_err = mean_squared_error(y_train,lin_reg.predict(X_train_scaled))
     lin_val_err = mean_squared_error(y_val,lin_reg.predict(X_val_scaled))
     print('Linear Regression Model')
-    print('Training RMSE:',np.sqrt(lin_err))
-    print('Validation RMSE',np.sqrt(lin_val_err))
+    print('Training RMSE:',f'{np.sqrt(lin_err):.2f}')
+    print('Validation RMSE',f'{np.sqrt(lin_val_err):.2f}')
     return lin_reg
 
 def random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
@@ -218,7 +218,8 @@ def random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
     # Choose the best params for rf model based on validation error
     for i in est_list:
         for j in mxd_list:
-            rf_reg = RandomForestRegressor(n_estimators=i,max_depth=j,random_state=1)
+            rf_reg = RandomForestRegressor(n_estimators=i,max_depth=j,
+                                            random_state=1)
             rf_reg.fit(X_train_scaled,y_train)
             rf_err = mean_squared_error(y_val,rf_reg.predict(X_val_scaled))
             if not min_val_err:
@@ -235,8 +236,8 @@ def random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
     rf_reg.fit(X_train_scaled,y_train)
     rf_err = mean_squared_error(y_train,rf_reg.predict(X_train_scaled))
     print('\nRandom Forest Regression Model')
-    print('Training RMSE:',np.sqrt(rf_err))
-    print('Validation MSE: ',np.sqrt(min_val_err))
+    print('Training RMSE:',f'{np.sqrt(rf_err):.2f}')
+    print('Validation MSE: ',f'{np.sqrt(min_val_err):.2f}')
     return rf_reg
 
 def neural_network_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
@@ -295,16 +296,18 @@ def neural_network_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
     nn_val_err = mean_squared_error(y_val,model.predict(X_val_scaled))
 
     print('\nNeural Network Model')
-    print('Training RMSE:',np.sqrt(nn_err))
-    print('Validation RMSE: ',np.sqrt(nn_val_err))
+    print('Training RMSE:',f'{np.sqrt(nn_err):.2f}')
+    print('Validation RMSE: ',f'{np.sqrt(nn_val_err):.2f}')
     return model
 
-def predict_data(reg,X):
+def predict_data(reg,X,scaler,visual):
     '''
     This function first select a random day and then predicts the number of
-    rentals for this date using the given model.
+    rentals for this date using the given model. If visual flag is true,
+    visualize the weather of this day.
     :param reg: model regressor
     :param X: DataFrame
+    :param visual: visualization flag
     '''
 
     # Generate a random row
@@ -316,36 +319,68 @@ def predict_data(reg,X):
     rand_pred = reg.predict(scaler.transform(np.array(rand_row).reshape(1,-1)))
 
     # Visualize the weather data and print the prediction
-    df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],\
-    'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
-        index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
-    print('\nSuppose the weather of a weekday is')
-    plt.figure()
-    plt.rcParams.update({'font.size': 18})
-    ax = df_newcase.plot.barh(figsize=(15,8))
-    plt.text(y=4,x=65,s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
-    plt.show()
+    if visual:
+        df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],\
+        'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
+            index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
+        print('\nSuppose the weather of a weekday is')
+        plt.figure()
+        plt.rcParams.update({'font.size': 18})
+        ax = df_newcase.plot.barh(figsize=(15,8))
+        plt.text(y=4,x=65,s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
+        plt.show()
     print('Then the predicted number of daily rentals is',int(rand_pred[0]))
 
 
-def full_model(df_trip, df_weather, visual=False):
+def full_model(df_trip, df_weather, visual, less_features):
     '''
     This function calls all other functions in this file.
     Visualize the mutual information scores and prediction data if the visual
     flag is true. Print the RMSE of each model.
+    It also builds models with only the features that has mi score > 0.1 if
+    the less_features flag is true. However, the RMSE does not improve.
     :param df_trip: trip dataset        :type: pd.DataFrame
     :param df_weather: weather dataset  :type: pd.DataFrame
     :param visual: visualization flag   :type: bool
+    :param less_features: feature flag  :type: bool
     '''
 
+    # Data preprocessing
     X, Y = prepare_data(df_trip,df_weather)
     if visual:
         mutual_info_scores(X,Y)
     X_train, X_val, y_train, y_val = split_train_valid_sets(X,Y)
     X_train_scaled, scaler = scale_data(X_train)
+
+    # Model fitting
     lin_reg = linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
     rf_reg = random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
     nn_model = neural_network_model_RMSE(X_train_scaled,y_train,
                                             X_val,y_val,scaler)
-    if visual:
-        predict_data(rf_reg,X)
+    # Prediction
+    predict_data(rf_reg,X,scaler,visual)
+
+    if not less_features:
+        return
+
+    # Repeat with less features
+    print('\nRepeat modeling with the following 4 features:')
+    selected_features = ['max_temperature_f','mean_temperature_f',
+                        'mean_humidity','weekend']
+    print(selected_features,'\n')
+    X_train = X_train[selected_features]
+    X_val = X_val[selected_features]
+    X_train_scaled, scaler = scale_data(X_train)
+
+    lin_reg = linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+    rf_reg = random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+    nn_model = neural_network_model_RMSE(X_train_scaled,y_train,
+                                            X_val,y_val,scaler)
+
+
+### CALLING EXAMPLE ###
+'''
+df_trip = pd.read_csv('dataset_bike_share/trip.csv')
+df_weather = pd.read_csv('dataset_bike_share/weather.csv')
+full_model(df_trip,df_weather,visual=True,less_features=False)
+'''
