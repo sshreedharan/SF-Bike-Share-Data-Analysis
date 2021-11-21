@@ -5,9 +5,27 @@
 # Description:
 # This file builds three models to predict the number of daily rentals using
 # weather and date. The three models are a linear regression model, a random
-# forest model and a neural network model.
-# To run this file, make sure this file, 'trip.csv' and 'weather.csv' are under
-# the same folder.
+# forest model and a neural network model. After calcaulating the RMSE of these
+# models, we can find that the random forest model has the lowest training RMSE.
+# Then we predict the number of daily rentals for a given day using the random
+# forest model.
+#
+# Functions:
+#   prepare_data(df_trip,df_weather)
+#   mutual_info_scores(X,Y)
+#   split_train_valid_sets(X,Y)
+#   scale_data(X_train)
+#   linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+#   random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+#   neural_network_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+#   predict_data(reg,X)
+#   full_model(df_trip, df_weather, visual=False)
+#
+# To run all parts of this file, call
+#   full_model(df_trip,df_weather,visual=True),
+#   where df_trip is trip pd.DataFrame and df_weather is weather pd.DataFrame.
+#   Set visual=True to output all the data visualizations.
+
 
 import pandas as pd
 import numpy as np
@@ -21,158 +39,313 @@ from sklearn.ensemble import RandomForestRegressor
 from tensorflow import keras
 from tensorflow.keras import layers,callbacks
 
-# Count the number of daily rentals using trip.csv
-df_trip = pd.read_csv('trip.csv')
-df_trip.drop(df_trip.columns.difference(['start_date']), 1, inplace=True)
-df_trip['start_date'] = df_trip['start_date']\
-.apply(lambda x: pd.Timestamp(x).strftime('%Y-%m-%d'))
+def prepare_data(df_trip,df_weather):
+    '''
+    This function prepare the data for model.
+    Y = number of daily rentals.
+    X = mean weather data + binary variable "weekend"
 
-# Y as pd.Series with date as index and number of rentals as values
-Y = df_trip.groupby(['start_date']).size()
-Y.name = 'rentals'
+    :param df_trip: trip data           :type: pd.DataFrame
+    :param df_weather: weather data     :type: pd.DataFrame
+    :rtype: tuple (X,Y) - (pd.DataFrame,pd.Series)
+    '''
 
-# Build a DateFrame with weather data.
-df_weather = pd.read_csv('weather.csv')
-df_weather.drop(['events','zip_code'],axis=1,inplace=True)
+    # Check the input:
+    assert(type(df_trip)==pd.DataFrame)
+    assert(type(df_weather)==pd.DataFrame)
 
-# X_full = Mean daily weather data + weekend(1 for weekends 0 for weekdays)
-df_weather['date'] = df_weather['date']\
-.apply(lambda x: pd.Timestamp(x).strftime('%Y-%m-%d'))
-X_full = df_weather.groupby(['date']).mean()
-X_full['weekend'] = X_full.apply(lambda x:\
- pd.Timestamp(x.name).weekday() in [5,6], 1, 0)
+    # Get Y, the number of daily rentals, using df_trip
+    df_trip.drop(df_trip.columns.difference(['start_date']),1,inplace=True)
+    df_trip['start_date'] = df_trip['start_date']\
+    .apply(lambda x: pd.Timestamp(x).strftime('%Y-%m-%d'))
 
-# Fillin max_gust_speed_mph na with its mean
-X_full = X_full.fillna(int(X_full.max_gust_speed_mph.mean()))
-
-# Mutual Information
-colnames = ['max_TEMP', 'mean_TEMP', 'min_TEMP',
-       'max_DWPNT', 'mean_DWPNT', 'min_DWPNT',
-       'max_HUM', 'mean_HUM', 'min_HUM',
-       'max_SLP', 'mean_SLP',
-       'min_SLP', 'max_VIS',
-       'mean_VIS', 'min_VIS', 'max_wind_speed',
-       'mean_wind_speed', 'max_gust_speed', 'cloud_cover',
-       'wind_dir', 'weekend']
-mi_scores = mutual_info_regression(X_full, Y)
-mi_scores = pd.Series(mi_scores, name="MI Scores", index=colnames)
-mi_scores = mi_scores.sort_values(ascending=True)
-
-# Visualize MI scores
-plt.figure()
-plt.rcParams.update({'font.size': 18})
-mi_scores.plot.barh(figsize=(18,10),title='Mutual Information Scores')
-plt.show()
-
-# Split the train set and validation set
-X_train, X_val, y_train, y_val = train_test_split(X_full,Y,
-    test_size=0.2,random_state=1)
-
-# Scaling using Standard Scaler
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_train_scaled = pd.DataFrame(X_train_scaled,columns=X_train.columns,
-    index=X_train.index)
+    # Y: pd.Series, index=data, values=daily rentals
+    Y = df_trip.groupby(['start_date']).size()
+    Y.name = 'rentals'
 
 
-# Linear regression model and coefficients:
-lin_reg = LinearRegression()
-lin_reg.fit(X_train_scaled,y_train)
-coeff = [(int(i*100))/100 for i in lin_reg.coef_]
-df_lincoef = pd.DataFrame({'coef':coeff},index=X_train.columns)
-df_lincoef = df_lincoef.sort_values(by=['coef'],key=abs,ascending=False)
-print('Linear Regression Model:\nCoefficients:')
-print(df_lincoef,'\n')
+    # Get X, mean weather data + a binary variable 'weekend'
+    # 'weekend': 1 for weekends, 0 for weekdays
+    df_weather.drop(['events','zip_code'],axis=1,inplace=True)
+    df_weather['date'] = df_weather['date']\
+    .apply(lambda x: pd.Timestamp(x).strftime('%Y-%m-%d'))
 
-# Linear regression MSE on training set and validation set
-X_val_scaled = scaler.transform(X_val)
-lin_err = mean_squared_error(y_train,lin_reg.predict(X_train_scaled))
-lin_val_err = mean_squared_error(y_val,lin_reg.predict(X_val_scaled))
-print('Training MSE: ',lin_err,'\nValidation MSE: ',lin_val_err)
+    X = df_weather.groupby(['date']).mean()
+    X['weekend'] = X.apply(lambda x:\
+     pd.Timestamp(x.name).weekday() in [5,6], 1, 0)
 
+    # Fillin max_gust_speed_mph na with its mean
+    X = X.fillna(int(X.max_gust_speed_mph.mean()))
 
-# Random forest model
-# Parameter tuning with grid search
-est_list = [70,75,80,85,90,95,100]
-mxd_list = [7,8,9,10,11,12]
-min_val_err = None
-
-# Choose the best params for rf model based on validation error
-for i in est_list:
-    for j in mxd_list:
-        rf_reg = RandomForestRegressor(n_estimators=i,max_depth=j,random_state=1)
-        rf_reg.fit(X_train_scaled,y_train)
-        rf_err = mean_squared_error(y_val,rf_reg.predict(X_val_scaled))
-        if not min_val_err:
-            min_val_err = rf_err
-            best_param = (i,j)
-            continue
-        if rf_err < min_val_err:
-            min_val_err = rf_err
-            best_param = (i,j)
-
-# Print the MSE errors
-rf_reg = RandomForestRegressor(n_estimators=best_param[0],
-    max_depth=best_param[1],random_state=1)
-rf_reg.fit(X_train_scaled,y_train)
-rf_err = mean_squared_error(y_train,rf_reg.predict(X_train_scaled))
-print('Random Forest Model:')
-print('Training MSE: ',rf_err,'\nValidation MSE: ',min_val_err)
+    return X,Y
 
 
-# Neural network model:
-# Early stopping callback
-early_stopping = callbacks.EarlyStopping(
-    min_delta = 0.001,
-    patience = 20,
-    restore_best_weights = True,
-)
+def mutual_info_scores(X,Y):
+    '''
+    This function visualizes the mutual information scores of X and Y
+    using bar chart.
+    :param X: weather data and 'weekend'    :type: pd.DataFrame
+    :param Y: number of daily rentals       :type: pd.Series
+    :rtype: None
+    '''
 
-# Build the model
-model = keras.Sequential([
-    layers.Dense(units=12, activation='relu'),
-    layers.Dense(units=12, activation='relu'),
-    layers.Dense(units=12, activation='relu'),
-    layers.Dense(units=12, activation='relu'),
-    layers.Dense(units=1, activation='linear'),
-])
+    # Check the input:
+    assert(type(X)==pd.DataFrame)
+    assert(type(Y)==pd.Series)
 
-model.compile(
-    #optimizer='adam',
-    loss='mse',
-)
+    # Short representations for colunms' names in X:
+    #   TEMP -> tempurature
+    #   DWPNT -> Dew Point
+    #   HUM -> Humidity
+    #   SLP -> Sea Level Pressure
+    #   VIS -> Visibility
+    colnames = ['max_TEMP', 'mean_TEMP', 'min_TEMP',
+           'max_DWPNT', 'mean_DWPNT', 'min_DWPNT',
+           'max_HUM', 'mean_HUM', 'min_HUM',
+           'max_SLP', 'mean_SLP',
+           'min_SLP', 'max_VIS',
+           'mean_VIS', 'min_VIS', 'max_wind_speed',
+           'mean_wind_speed', 'max_gust_speed', 'cloud_cover',
+           'wind_dir', 'weekend']
 
-# Fit the model
-history = model.fit(
-    X_train_scaled, y_train,
-    validation_data = (X_val_scaled, y_val),
-    batch_size = 20,
-    epochs = 500,
-    callbacks=[early_stopping],
-    verbose = 0,
-)
+    # Compute MI scores using sklearn module
+    mi_scores = mutual_info_regression(X, Y)
+    mi_scores = pd.Series(mi_scores, name="MI Scores", index=colnames)
+    mi_scores = mi_scores.sort_values(ascending=True)
 
-# Compute the errors
-nn_err = mean_squared_error(y_train,model.predict(X_train_scaled))
-nn_val_err = mean_squared_error(y_val,model.predict(X_val_scaled))
+    # Visualize MI scores
+    plt.figure()
+    plt.rcParams.update({'font.size': 18})
+    mi_scores.plot.barh(figsize=(15,8),title='Mutual Information Scores')
+    plt.show()
 
-print('Neural Network Model:')
-print('Training MSE: ',nn_err,'\nValidation MSE: ',nn_val_err)
 
-# Predict new cases with rf model
-# Generate a random row, assume it to be new case
-np.random.seed(seed=42)
-idx = int(np.random.rand()*len(X_full))
-rand_row = X_full.iloc[idx,]
-rand_pred = rf_reg.predict(scaler.transform(np.array(rand_row).reshape(1,-1)))
+def split_train_valid_sets(X,Y):
+    '''
+    This function splits the X and Y into training sets and validation sets.
+    Set test_size ratio = 0.2, random_state = 1
+    :param X: weather data and 'weekend'    :type: pd.DataFrame
+    :param Y: number of daily rentals       :type: pd.Series
+    :return: (X_train, X_val, y_train, y_val)
+    :rtype: (pd.DataFrame,pd.DataFrame,pd.Series,pd.Series)
+    '''
 
-# Plot the prediction
-df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],\
-'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
-    index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
-plt.figure()
-plt.rcParams.update({'font.size': 18})
-ax = df_newcase.plot.barh(figsize=(18,10))
-plt.text(y=4,x=65,s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
-plt.show()
-print('\nThe predicted number of daily rentals is',int(rand_pred[0]))
+    # Check the input:
+    assert(type(X)==pd.DataFrame)
+    assert(type(Y)==pd.Series)
+
+    # Split the train set and validation set
+    return train_test_split(X,Y,test_size=0.2,random_state=1)
+
+
+def scale_data(X_train):
+    '''
+    This function scales X_train data with standard scaler.
+    It returns the scaled data and the scaler.
+    :param X_train: training set X          :type: pd.DataFrame
+    :rtype: (pd.DataFrame, scaler)
+    '''
+
+    # Check the input:
+    assert(type(X_train)==pd.DataFrame)
+
+    # Scaling using Standard Scaler
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_train_scaled = pd.DataFrame(X_train_scaled,columns=X_train.columns,
+        index=X_train.index)
+
+    return X_train_scaled, scaler
+
+
+def linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
+    '''
+    This function builds a linear regression model on X_train_scaled and
+    y_train. Then it calculates the root-mean-squared-error of training
+    set and validation set.
+    Return the regressor.
+    :param X_train_scaled: training set X   :type: pd.DataFrame
+    :param y_train: training set y          :type: pd.Series
+    :param X_val: validation set X          :type: pd.DataFrame
+    :param y_val: validation set y          :type: pd.Series
+    :param scaler: standard scaler
+    '''
+
+    # Check the input:
+    assert(type(X_train_scaled)==pd.DataFrame)
+    assert(type(y_train)==pd.Series)
+    assert(type(X_val)==pd.DataFrame)
+    assert(type(y_val)==pd.Series)
+
+    # Linear regression model
+    lin_reg = LinearRegression()
+    lin_reg.fit(X_train_scaled,y_train)
+
+    # Linear regression MSE on training set and validation set
+    X_val_scaled = scaler.transform(X_val)
+    lin_err = mean_squared_error(y_train,lin_reg.predict(X_train_scaled))
+    lin_val_err = mean_squared_error(y_val,lin_reg.predict(X_val_scaled))
+    print('Linear Regression Model')
+    print('Training RMSE:',np.sqrt(lin_err))
+    print('Validation RMSE',np.sqrt(lin_val_err))
+    return lin_reg
+
+def random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
+    '''
+    This function builds a random forest regression model on X_train_scaled and
+    y_train. Then it calculates the root-mean-squared-error of training
+    set and validation set.
+    Return the regressor.
+    :param X_train_scaled: training set X   :type: pd.DataFrame
+    :param y_train: training set y          :type: pd.Series
+    :param X_val: validation set X          :type: pd.DataFrame
+    :param y_val: validation set y          :type: pd.Series
+    :param scaler: standard scaler
+    '''
+
+    # Check the input:
+    assert(type(X_train_scaled)==pd.DataFrame)
+    assert(type(y_train)==pd.Series)
+    assert(type(X_val)==pd.DataFrame)
+    assert(type(y_val)==pd.Series)
+
+    # Simple parameter tuning with grid search
+    est_list = [70,75,80,85,90,95,100]
+    mxd_list = [7,8,9,10,11,12]
+    min_val_err = None
+    X_val_scaled = scaler.transform(X_val)
+
+    # Choose the best params for rf model based on validation error
+    for i in est_list:
+        for j in mxd_list:
+            rf_reg = RandomForestRegressor(n_estimators=i,max_depth=j,random_state=1)
+            rf_reg.fit(X_train_scaled,y_train)
+            rf_err = mean_squared_error(y_val,rf_reg.predict(X_val_scaled))
+            if not min_val_err:
+                min_val_err = rf_err
+                best_param = (i,j)
+                continue
+            if rf_err < min_val_err:
+                min_val_err = rf_err
+                best_param = (i,j)
+
+    # Print the RMSEs
+    rf_reg = RandomForestRegressor(n_estimators=best_param[0],
+        max_depth=best_param[1],random_state=1)
+    rf_reg.fit(X_train_scaled,y_train)
+    rf_err = mean_squared_error(y_train,rf_reg.predict(X_train_scaled))
+    print('\nRandom Forest Regression Model')
+    print('Training RMSE:',np.sqrt(rf_err))
+    print('Validation MSE: ',np.sqrt(min_val_err))
+    return rf_reg
+
+def neural_network_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler):
+    '''
+    This function builds a neural network regression model on X_train_scaled
+    and y_train. Then it calculates the root-mean-squared-error of training
+    set and validation set.
+    Return the model.
+    :param X_train_scaled: training set X   :type: pd.DataFrame
+    :param y_train: training set y          :type: pd.Series
+    :param X_val: validation set X          :type: pd.DataFrame
+    :param y_val: validation set y          :type: pd.Series
+    :param scaler: standard scaler
+    '''
+
+    # Check the input:
+    assert(type(X_train_scaled)==pd.DataFrame)
+    assert(type(y_train)==pd.Series)
+    assert(type(X_val)==pd.DataFrame)
+    assert(type(y_val)==pd.Series)
+
+    # Early stopping callback
+    early_stopping = callbacks.EarlyStopping(
+        min_delta = 0.001,
+        patience = 20,
+        restore_best_weights = True,
+    )
+
+    # Build the model
+    model = keras.Sequential([
+        layers.Dense(units=12, activation='relu'),
+        layers.Dense(units=12, activation='relu'),
+        layers.Dense(units=12, activation='relu'),
+        layers.Dense(units=12, activation='relu'),
+        layers.Dense(units=1, activation='linear'),
+    ])
+
+    model.compile(
+        #optimizer='adam',
+        loss='mse',
+    )
+
+    # Fit the model
+    X_val_scaled = scaler.transform(X_val)
+    history = model.fit(
+        X_train_scaled, y_train,
+        validation_data = (X_val_scaled, y_val),
+        batch_size = 20,
+        epochs = 500,
+        callbacks=[early_stopping],
+        verbose = 0,
+    )
+
+    # Compute the errors
+    nn_err = mean_squared_error(y_train,model.predict(X_train_scaled))
+    nn_val_err = mean_squared_error(y_val,model.predict(X_val_scaled))
+
+    print('\nNeural Network Model')
+    print('Training RMSE:',np.sqrt(nn_err))
+    print('Validation RMSE: ',np.sqrt(nn_val_err))
+    return model
+
+def predict_data(reg,X):
+    '''
+    This function first select a random day and then predicts the number of
+    rentals for this date using the given model.
+    :param reg: model regressor
+    :param X: DataFrame
+    '''
+
+    # Generate a random row
+    np.random.seed(seed=42)
+    idx = int(np.random.rand()*len(X))
+    rand_row = X.iloc[idx,]
+
+    # Prediction
+    rand_pred = reg.predict(scaler.transform(np.array(rand_row).reshape(1,-1)))
+
+    # Visualize the weather data and print the prediction
+    df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],\
+    'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
+        index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
+    print('\nSuppose the weather of a weekday is')
+    plt.figure()
+    plt.rcParams.update({'font.size': 18})
+    ax = df_newcase.plot.barh(figsize=(15,8))
+    plt.text(y=4,x=65,s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
+    plt.show()
+    print('Then the predicted number of daily rentals is',int(rand_pred[0]))
+
+
+def full_model(df_trip, df_weather, visual=False):
+    '''
+    This function calls all other functions in this file.
+    Visualize the mutual information scores and prediction data if the visual
+    flag is true. Print the RMSE of each model.
+    :param df_trip: trip dataset        :type: pd.DataFrame
+    :param df_weather: weather dataset  :type: pd.DataFrame
+    :param visual: visualization flag   :type: bool
+    '''
+
+    X, Y = prepare_data(df_trip,df_weather)
+    if visual:
+        mutual_info_scores(X,Y)
+    X_train, X_val, y_train, y_val = split_train_valid_sets(X,Y)
+    X_train_scaled, scaler = scale_data(X_train)
+    lin_reg = linear_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+    rf_reg = random_forest_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
+    nn_model = neural_network_model_RMSE(X_train_scaled,y_train,
+                                            X_val,y_val,scaler)
+    if visual:
+        predict_data(rf_reg,X)
