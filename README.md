@@ -1,21 +1,26 @@
-## Project SF-Bike-Share-Data-Analysis
+# Project SF-Bike-Share-Data-Analysis
 
-# Description:
+## Description:
   ECE 143 Group Project.
-# Date:
+## Date:
   11/07/2021
-# Authors: Group 0
-  Aditi Anand,          a2anand@ucsd.edu\n
-  Yiju Xue,             y7xue@ucsd.edu\n
-  Pei Zhou,             pezhou@ucsd.edu\n
-  Sriram Shreedharan,   sshreedharan@ucsd.edu\n
-  Haoyu Wang,           haw246@ucsd.edu\n
+## Authors: Group 0
+  Aditi Anand, a2anand@ucsd.edu
 
-# File Structures:
+  Yiju Xue, y7xue@ucsd.edu
+
+  Pei Zhou, pezhou@ucsd.edu
+
+  Sriram Shreedharan, sshreedharan@ucsd.edu
+
+  Haoyu Wang, haw246@ucsd.edu
+
+
+## File Structures:
   TODO
 
-# How to Run Our Code:
+## How to Run Our Code:
   TODO
 
-# Third-Party Modules:
+## Third-Party Modules:
   TODO
