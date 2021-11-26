@@ -9,7 +9,7 @@
 # models, we can find that the random forest model has the lowest training RMSE.
 # Then we predict the number of daily rentals for a given day using the random
 # forest model.
-#
+
 # Functions:
 #   prepare_data(df_trip,df_weather)
 #   mutual_info_scores(X,Y)
@@ -20,7 +20,7 @@
 #   neural_network_model_RMSE(X_train_scaled,y_train,X_val,y_val,scaler)
 #   predict_data(reg,X,scaler,visual)
 #   full_model(df_trip,df_weather,visual,less_features)
-#
+
 # To run all parts of this file, call
 #   full_model(df_trip,df_weather,visual,less_features),
 #   where df_trip is trip pd.DataFrame and df_weather is weather pd.DataFrame.
@@ -115,8 +115,7 @@ def mutual_info_scores(X,Y):
 
     # Visualize MI scores
     plt.figure()
-    plt.rcParams.update({'font.size': 18})
-    mi_scores.plot.barh(figsize=(15,8),title='Mutual Information Scores')
+    mi_scores.plot.barh(title='Mutual Information Scores')
     plt.show()
 
 
@@ -320,14 +319,15 @@ def predict_data(reg,X,scaler,visual):
 
     # Visualize the weather data and print the prediction
     if visual:
-        df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],\
-        'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
+        df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],
+            'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],
+            'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
             index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
         print('\nSuppose the weather of a weekday is')
         plt.figure()
-        plt.rcParams.update({'font.size': 18})
-        ax = df_newcase.plot.barh(figsize=(15,8))
-        plt.text(y=4,x=65,s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
+        df_newcase.plot.barh()
+        plt.text(y=3,x=55,
+            s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
         plt.show()
     print('Then the predicted number of daily rentals is',int(rand_pred[0]))
 
@@ -378,7 +378,7 @@ def full_model(df_trip, df_weather, visual, less_features):
                                             X_val,y_val,scaler)
 
 
-### CALLING EXAMPLE ###
+### EXAMPLE ###
 '''
 df_trip = pd.read_csv('dataset_bike_share/trip.csv')
 df_weather = pd.read_csv('dataset_bike_share/weather.csv')

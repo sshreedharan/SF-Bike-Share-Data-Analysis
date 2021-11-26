@@ -17,7 +17,10 @@
 
 
 ## File Structures
-  TODO
+  dataset_bike_share: a folder that contains our dataset, including 'station.csv',
+  'status.csv', 'trip.csv', 'weather.csv', and 'Weekly_San_Francisco_CA_Regular_Reformulated_Retail_Gasoline_Prices.csv'.
+
+  
 
 ## How to Run Our Code
   TODO

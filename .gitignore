@@ -1,0 +1,4 @@
+
+.DS_Store
+dataset_bike_share/weather.csv
+*.csv
