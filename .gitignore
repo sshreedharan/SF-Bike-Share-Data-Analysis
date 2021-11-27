@@ -4,3 +4,4 @@ dataset_bike_share/weather.csv
 *.csv
 *.pkl
 *.pyc
+tile.html
