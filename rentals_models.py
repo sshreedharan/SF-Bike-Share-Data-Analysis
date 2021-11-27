@@ -115,7 +115,7 @@ def mutual_info_scores(X,Y):
 
     # Visualize MI scores
     plt.figure()
-    mi_scores.plot.barh(title='Mutual Information Scores')
+    mi_scores.plot.barh(title='Mutual Information Scores',figsize=(10,8))
     plt.show()
 
 
@@ -320,16 +320,26 @@ def predict_data(reg,X,scaler,visual):
     # Visualize the weather data and print the prediction
     if visual:
         df_newcase = pd.DataFrame({'Max':[67.0,51.2,86.0,29.98,10.0,21.2,26],
-            'Mean':[59.8,48.8,69.0,29.95,9.6,9.0,0],
-            'Min':[52.2,46.2,51.2,29.92,7.8,0,0]},
-            index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
-        print('\nSuppose the weather of a weekday is')
-        plt.figure()
-        df_newcase.plot.barh()
-        plt.text(y=3,x=55,
-            s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False')
+                    'Mean':[59.8,48.8,69.0,29,9.6,9.0,26],
+                    'Min':[52.2,46.2,51.2,28,7.8,0,26]},
+                    index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
+        dif1 = df_newcase['Max']-df_newcase['Mean']
+        dif2 = df_newcase['Mean']-df_newcase['Min']
+        df_try = pd.DataFrame({'Min':df_newcase['Min'],'Mean':dif2,'Max':dif1},
+                    index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
+        df_try.plot.bar(stacked=True,figsize=(10,8),
+                    color=['lightsteelblue','cornflowerblue','royalblue'],
+                    rot=0, title='Weather Information')
+
+        plt.text(y=55,x=3,
+            s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False',
+            fontsize=16)
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+        plt.legend(prop={'size': 16})
         plt.show()
-    print('Then the predicted number of daily rentals is',int(rand_pred[0]))
+    print('then the predicted number of daily rentals is',
+        str(int(rand_pred[0])+'.'))
 
 
 def full_model(df_trip, df_weather, visual, less_features):
@@ -380,6 +390,7 @@ def full_model(df_trip, df_weather, visual, less_features):
 
 ### EXAMPLE ###
 '''
+plt.style.use('bmh')
 df_trip = pd.read_csv('dataset_bike_share/trip.csv')
 df_weather = pd.read_csv('dataset_bike_share/weather.csv')
 full_model(df_trip,df_weather,visual=True,less_features=False)
