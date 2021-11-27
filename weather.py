@@ -31,7 +31,7 @@ def inv_rental_num_date_format(x):
     date = time.strftime("%m/%d/%Y", time.strptime(x, "%Y/%m/%d"))
     return date
 
-def prepocessing_csv():
+def preprocessing_csv():
     '''
     preprocess to generate a new csv that contains number of rentals per day
     :return: None
@@ -91,5 +91,5 @@ if __name__ == '__main__':
     '''
     Datasets should be put in the 'dataset_bike_share' folder
     '''
-    # prepocessing_csv()  # This function only needs to be run the first time.
+    # preprocessing_csv()  # This function only needs to be run the first time.
     visualization_weather()
