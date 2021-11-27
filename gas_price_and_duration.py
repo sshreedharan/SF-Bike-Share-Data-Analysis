@@ -56,7 +56,7 @@ def visualization_gas_price():
     this function is used to visualize the relationship between Number of Rentals and Gas Price
     :return: None
     '''
-    gas_price_df = pd.read_csv('Weekly_San_Francisco_CA_Regular_Reformulated_Retail_Gasoline_Prices.csv')
+    gas_price_df = pd.read_csv('dataset_bike_share/Weekly_San_Francisco_CA_Regular_Reformulated_Retail_Gasoline_Prices.csv')
     gas_price = pd.Series(list(gas_price_df.loc[:,'price']),index=gas_price_df.loc[:,'date'].map(weather_date_format))
     dates = (pd.date_range('20130826', periods=736)).map(date_range_convert)
     gas_price_everyday = gas_price.reindex(dates).interpolate().iloc[3:]
@@ -75,7 +75,7 @@ def visualization_duration():
     this function is used to visualize the relationship between Start Time and Duration
     :return: None
     '''
-    trip = pd.read_csv('trip.csv')
+    trip = pd.read_csv('dataset_bike_share/trip.csv')
     trip.loc[:, 'start_time'] = trip.loc[:, 'start_date'].map(trip_date_convert)
     trip = trip.loc[:5000].sort_values(by=['start_time'])
     my_x_ticks = np.arange(0, 1000, 110)
