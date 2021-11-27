@@ -339,7 +339,7 @@ def predict_data(reg,X,scaler,visual):
         plt.legend(prop={'size': 16})
         plt.show()
     print('then the predicted number of daily rentals is',
-        str(int(rand_pred[0])+'.'))
+        (str(int(rand_pred[0]))+'.'))
 
 
 def full_model(df_trip, df_weather, visual, less_features):
