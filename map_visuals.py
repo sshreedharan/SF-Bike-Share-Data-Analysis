@@ -5,8 +5,8 @@ from os.path import exists as file_exists
 
 from pandas.core.frame import DataFrame
 from preprocessing import merge_data
-from bokeh.io import curdoc
-from bokeh.plotting import figure, ColumnDataSource
+from bokeh.io import curdoc, output_notebook
+from bokeh.plotting import figure, ColumnDataSource, show
 from bokeh.tile_providers import get_provider
 from bokeh.palettes import PRGn, RdYlGn, Category20
 from bokeh.transform import linear_cmap
@@ -15,7 +15,7 @@ from bokeh.models import ColorBar, NumeralTickFormatter
 from bokeh.models import Select
 from datetime import time
 
-# To run this file and visualize the grographic map, 
+# To run this file and visualize the grographic map,
 # start a bokeh server and pass the file name from command line.
 # bokeh serve --show map_visuals.py
 
@@ -38,12 +38,12 @@ def read_data(file):
 
     if (file_exists(file)):
         print("Reading file from Cache.")
-            
+
     else:
         print("Reading and Storing Data.")
         merge_data()
         print("Data Stored as pickle.")
-    
+
     print("Reading dataframe from pickle file.")
     df = pd.read_pickle(file)
     print("Data read.")
@@ -68,12 +68,12 @@ def read_station_id_dict(file):
 
     if (file_exists(file)):
         print("Reading station ID dictionary file from Cache.")
-        
+
     else:
         print("Reading and Storing Data.")
         merge_data()
         print("Data Stored as pickle.")
-        
+
     with open(file, 'rb') as f:
         station_id_dict = pickle.load(f)
     print("Data Read.")
@@ -81,13 +81,13 @@ def read_station_id_dict(file):
 
 def mercator_coor(x,y):
     '''
-    To convert latitude and longitude to mercator coordinates. 
+    To convert latitude and longitude to mercator coordinates.
 
     Parameters
     ----------
     x : float
         The input latitutde.
-    
+
     y : float
         The input longitude
 
@@ -101,11 +101,11 @@ def mercator_coor(x,y):
 
     lat = x
     lon = y
-    
+
     r_major = 6378137.000
     x = r_major * np.radians(lon)
     scale = x/lon
-    y = 180.0/np.pi * np.log(np.tan(np.pi/4.0 + 
+    y = 180.0/np.pi * np.log(np.tan(np.pi/4.0 +
         lat * (np.pi/180.0)/2.0)) * scale
     return (x, y)
 
@@ -150,26 +150,28 @@ def station_map_visual():
     palette = Category20[17]
     source = ColumnDataSource(data=coord_df)
     color_mapper = linear_cmap(field_name = 'dock_count', palette = palette, low = coord_df['dock_count'].min(), high = coord_df['dock_count'].max())
-    
+
     tooltips = [("Station Name","@name"), ("City","@city"), ("Dock Count","@dock_count")]
     print("Parameters are set.")
-    
+
     print("Plotting figure.")
-    p = figure(title = 'Bay Area Bike Share Map', 
-               x_axis_type="mercator", y_axis_type="mercator", 
+    p = figure(title = 'Bay Area Bike Share Map',
+               x_axis_type="mercator", y_axis_type="mercator",
                x_axis_label = 'Longitude', y_axis_label = 'Latitude', tooltips = tooltips)
     p.add_tile(chosentile)
     print("Plotting points on Map.")
     p.circle(x = 'mercator_x', y = 'mercator_y', color = color_mapper, source=source, size='point_size', fill_alpha = 0.5)
-    
+
     print("Creating color bar for reference.")
-    color_bar = ColorBar(color_mapper=color_mapper['transform'], 
-                     formatter = NumeralTickFormatter(format='0.0[0000]'), 
+    color_bar = ColorBar(color_mapper=color_mapper['transform'],
+                     formatter = NumeralTickFormatter(format='0.0[0000]'),
                      label_standoff = 13, width=17, location=(0,0))
     p.add_layout(color_bar, 'right')
     print("Color bar created.")
-    
+
     curdoc().add_root(column(p))
+    output_notebook()
+    show(p)
 
 def value_conversion(select_val):
     '''
@@ -183,7 +185,7 @@ def value_conversion(select_val):
     Returns
     -------
     time_val : int
-        This is the corresponding time value in the hour column of the dataframe. 
+        This is the corresponding time value in the hour column of the dataframe.
     '''
 
     if select_val == "12 AM":
@@ -203,7 +205,7 @@ def value_conversion(select_val):
 def seasonal_bike_availability():
     '''
     To visualize the availabilty of bikes in different stations on an intereactive map based on the season and hour of the day.
-    The Select widgets are used to choose the season and hour, and the average bike availablity at a specific hour for each station during 
+    The Select widgets are used to choose the season and hour, and the average bike availablity at a specific hour for each station during
     Fall, Winter, Spring, and Summer over the years 2013 - 2015 are plotted. From this, we can infer where and when to add more bikes or remove bikes.
     '''
 
@@ -214,28 +216,28 @@ def seasonal_bike_availability():
 
     status_df['time'] = pd.to_datetime(status_df['time'])
     status_df = status_df.drop(['docks_available'], axis=1).dropna()
-    
-    status_df = status_df.loc[((status_df['time'].dt.time >= time(00,00,00)) & (status_df['time'].dt.time < time(1,00,00))) 
+
+    status_df = status_df.loc[((status_df['time'].dt.time >= time(00,00,00)) & (status_df['time'].dt.time < time(1,00,00)))
         | ((status_df['time'].dt.time >= time(4,00,00)) & (status_df['time'].dt.time < time(5,00,00)))
         | ((status_df['time'].dt.time >= time(8,00,00)) & (status_df['time'].dt.time < time(9,00,00)))
         | ((status_df['time'].dt.time >= time(12,00,00)) & (status_df['time'].dt.time < time(13,00,00)))
         | ((status_df['time'].dt.time >= time(16,00,00)) & (status_df['time'].dt.time < time(17,00,00)))
         | ((status_df['time'].dt.time >= time(20,00,00)) & (status_df['time'].dt.time < time(21,00,00)))]
-    
+
     status_df['hour'] = status_df['time'].dt.hour
-    
+
     seasons = ['Fall', 'Winter', 'Spring', 'Summer']
     season_conditions = [(status_df['time'].dt.month >= 9) & (status_df['time'].dt.month <=11),
     (status_df['time'].dt.month == 12) | (status_df['time'].dt.month <=2),
     (status_df['time'].dt.month >= 3) & (status_df['time'].dt.month <=5),
     (status_df['time'].dt.month >= 6) & (status_df['time'].dt.month <=8)]
-    
+
     status_df['season'] = np.select(season_conditions, seasons)
 
     df = status_df.groupby(['station_id', 'hour', 'season']).mean()
     df = df.astype({"bikes_available" : int})
     df.reset_index(level=[0,1,2], inplace = True)
-    
+
     status_df_new = pd.merge(df,station_df,on='station_id',how='left')
 
     coord_df = coordinate_dataframe(status_df_new)
@@ -272,27 +274,29 @@ def seasonal_bike_availability():
     chosentile = get_provider('CARTODBPOSITRON_RETINA')
     palette = Category20[17]
     color_mapper = linear_cmap(field_name = 'bikes_available', palette = palette, low = source_df['bikes_available'].min(), high = source_df['bikes_available'].max())
-    
+
     tooltips = [("Station Name","@name"), ("City","@city"), ("Bikes Available","@bikes_available")]
     print("Parameters are set.")
-    
+
     print("Plotting figure.")
-    p = figure(title = 'Bike Availability Map', 
-               x_axis_type='mercator', y_axis_type='mercator', 
+    p = figure(title = 'Bike Availability Map',
+               x_axis_type='mercator', y_axis_type='mercator',
                x_axis_label = 'Longitude', y_axis_label = 'Latitude', tooltips = tooltips)
     p.add_tile(chosentile)
     print("Plotting points on Map.")
- 
+
     p.circle(x = 'mercator_x', y = 'mercator_y', color = color_mapper, source=source, size= 'point_size', fill_alpha = 0.5)
-    
+
     print("Creating color bar for reference.")
-    color_bar = ColorBar(color_mapper=color_mapper['transform'], 
-                     formatter = NumeralTickFormatter(format='0.0[0000]'), 
+    color_bar = ColorBar(color_mapper=color_mapper['transform'],
+                     formatter = NumeralTickFormatter(format='0.0[0000]'),
                      label_standoff = 13, width=17, location=(0,0))
     p.add_layout(color_bar, 'right')
     print("Color bar created.")
-    
+
     curdoc().add_root(column(select1, select2, p))
+    output_notebook()
+    show(p)
 
 station_map_visual()
 seasonal_bike_availability()
