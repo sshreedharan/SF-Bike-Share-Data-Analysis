@@ -60,7 +60,7 @@ def visualization_gas_price():
     gas_price = pd.Series(list(gas_price_df.loc[:,'price']),index=gas_price_df.loc[:,'date'].map(weather_date_format))
     dates = (pd.date_range('20130826', periods=736)).map(date_range_convert)
     gas_price_everyday = gas_price.reindex(dates).interpolate().iloc[3:]
-    rental_num = pd.read_csv('rental_count_everyday.csv')
+    rental_num = pd.read_csv('dataset_bike_share/rental_count_everyday.csv')
     rental_num.loc[:,'date'] = rental_num.loc[:,'date'].map(rental_num_date_format)
     sort_rental_num = rental_num.sort_values(by=['date'])
     sort_rental_num.loc[:,'date'] = sort_rental_num.loc[:,'date'].map(inv_rental_num_date_format)
