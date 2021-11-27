@@ -89,7 +89,7 @@ def visualization_duration():
 
 if __name__ == '__main__':
     '''
-    Datasets and code should be put in the same folder
+    Datasets should be put in the 'dataset_bike_share' folder
     '''
     visualization_gas_price()
     visualization_duration()

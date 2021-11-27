@@ -39,7 +39,7 @@ def prepocessing_csv():
     def date_preserve(date_time):
         date = time.strftime("%m/%d/%Y", time.strptime(date_time, "%m/%d/%Y %H:%M"))
         return date
-    df = pd.read_csv('trip.csv')
+    df = pd.read_csv('dataset_bike_share/trip.csv')
     df.loc[:, 'date'] = df.start_date.map(date_preserve)
     df_grp = df.groupby('date').count()
     df_grp.loc[:, 'id'].to_csv('dataset_bike_share/rental_count_everyday.csv')
@@ -49,9 +49,9 @@ def visualization_weather():
     this function is used to visualize the relationship between Number of Rentals and Weather Factors
     :return: None
     '''
-    weather = pd.read_csv('weather.csv')
+    weather = pd.read_csv('dataset_bike_share/weather.csv')
     weather.loc[:,'date'] = weather.date.map(weather_date_format)
-    rental_num = pd.read_csv('rental_count_everyday.csv')
+    rental_num = pd.read_csv('dataset_bike_share/rental_count_everyday.csv')
     rental_num.loc[:,'date'] = rental_num.loc[:,'date'].map(rental_num_date_format)
     sort_rental_num = rental_num.sort_values(by=['date'])
     sort_rental_num.loc[:,'date'] = sort_rental_num.loc[:,'date'].map(inv_rental_num_date_format)
@@ -89,7 +89,7 @@ def visualization_weather():
 
 if __name__ == '__main__':
     '''
-    Datasets and code should be put in the same folder
+    Datasets should be put in the 'dataset_bike_share' folder
     '''
     # prepocessing_csv()  # This function only needs to be run the first time.
     visualization_weather()
