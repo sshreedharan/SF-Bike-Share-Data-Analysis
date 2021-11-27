@@ -42,7 +42,7 @@ def prepocessing_csv():
     df = pd.read_csv('trip.csv')
     df.loc[:, 'date'] = df.start_date.map(date_preserve)
     df_grp = df.groupby('date').count()
-    df_grp.loc[:, 'id'].to_csv('rental_count_everyday.csv')
+    df_grp.loc[:, 'id'].to_csv('dataset_bike_share/rental_count_everyday.csv')
 
 def visualization_weather():
     '''
@@ -93,6 +93,3 @@ if __name__ == '__main__':
     '''
     # prepocessing_csv()  # This function only needs to be run the first time.
     visualization_weather()
-
-
-
