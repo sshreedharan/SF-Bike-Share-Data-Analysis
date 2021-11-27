@@ -1,7 +1,7 @@
-import numpy as np 
-import pandas as pd 
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import figure, output_file, show, output_notebook
 from bokeh.tile_providers import CARTODBPOSITRON, get_provider
 from bokeh.models import ColumnDataSource, GMapOptions
 
@@ -174,7 +174,7 @@ def monthly_avg_duration_vs(data):
     plt.show()
 
 # subscriber vs customer: avg duration day of week
-def dayofweek_avg_duration(data):
+def dayofweek_avg_duration_vs(data):
     """
     Args:
         data (pd.DataFrame) preprocessed trip data
@@ -212,18 +212,18 @@ def m_pop_s_station(trip,station):
     for i in range(1,7):
         tmp = pop_s_day[pop_s_day['s_dayofweek']==i].nlargest(5,'size')
         pop_s_wk = pd.concat([pop_s_wk,tmp])
-    
+
     station = station[['name','lat','long']]
     station = station.rename(columns={'name':'start_station_name'})
     pop_s_wk = pd.merge(station,pop_s_wk,on='start_station_name',how = 'right')
-    
+
     # convert latitude and longitude to mercator coordinates
     pop_s_wk['x'] = np.radians(pop_s_wk['long'])*6378137
     pop_s_wk['y'] = 180/np.pi*np.log(np.tan(np.pi/4+pop_s_wk['lat']*(np.pi/180)/2))*pop_s_wk['x']/pop_s_wk['long']
-    
+
     # circle radius defined by trip count
     pop_s_wk['radius'] = pop_s_wk['size']//10
-    
+
     output_file("tile.html")
 
     tile_provider = get_provider(CARTODBPOSITRON)
@@ -239,5 +239,6 @@ def m_pop_s_station(trip,station):
     p.circle(x="x", y="y", size=10, fill_color="yellow", fill_alpha=0.4, radius = 'radius', source=source1)
     p.circle(x="x", y="y", size=10, fill_color="red", fill_alpha=0.4, radius = 'radius', source=source2)
 
+    output_notebook()
     show(p)
     return pop_s_wk
