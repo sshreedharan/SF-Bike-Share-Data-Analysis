@@ -41,9 +41,15 @@
 
 ## Third-Party Modules
   numpy
+
   pandas
+
   matplotlib.pyplot
+
   bokeh
+
   holoviews
+
   sklearn
+  
   tensorflow.keras
