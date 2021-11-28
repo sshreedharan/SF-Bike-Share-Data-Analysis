@@ -70,13 +70,13 @@ def visualize_rentals_year(rentals):
 
     count = count_month_yr(rentals)
     count.drop('Aug-2013', inplace=True)
-    
+
     year1 = count.loc['Sep-2013':'Aug-2014']
     year2 = count.loc['Sep-2014':'Aug-2015']
     months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
 
-    plt.plot(months, year1/1000, 'r.-', label='2013-2014')
-    plt.plot(months, year2/1000, 'g.-', label='2014-2015')
+    plt.plot(months, year1/1000, label='2013-2014')
+    plt.plot(months, year2/1000, label='2014-2015')
     plt.xlabel('Month')
     plt.ylabel('Number of Trips (thousands)')
     plt.title('Number of Bike Trips Taken from Sep 2013 - Aug 2015')
@@ -114,8 +114,8 @@ def visualize_rentals_month(rentals):
     ordered_avg1 = avg_per_month['Jan':]
     ordered_avg2 = avg_per_month[:'Dec']
 
-    plt.bar(ordered_avg1.index, ordered_avg1/1000, color='purple')
-    plt.bar(ordered_avg2.index, ordered_avg2/1000, color='purple')
+    plt.bar(ordered_avg1.index, ordered_avg1/1000, color='#348ABD')
+    plt.bar(ordered_avg2.index, ordered_avg2/1000, color='#348ABD')
     plt.xlabel('Month')
     plt.ylabel('Number of Trips (thousands)')
     plt.title('Average Number of Bike Trips Taken per Month')
