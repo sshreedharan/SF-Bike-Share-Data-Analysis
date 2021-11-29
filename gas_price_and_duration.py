@@ -48,7 +48,7 @@ def trip_date_convert(x):
     :param x: str
     :return: str
     '''
-    date = time.strftime("%H:%M", time.strptime(x, "%m/%d/%Y %H:%M"))
+    date = time.strftime("%H", time.strptime(x, "%m/%d/%Y %H:%M"))
     return date
 
 def visualization_gas_price():
@@ -89,9 +89,27 @@ def visualization_duration():
     plt.title('Relationship between Start Time and Duration')
     plt.show()
 
+def visualization_start_time():
+    '''
+    this function is used to visualize the relationship between Start Time and Rentals
+    :return: None
+    '''
+    plt.style.use("bmh")
+    trip = pd.read_csv('trip.csv')
+    trip.loc[:, 'start_time'] = trip.loc[:, 'start_date'].map(trip_date_convert)
+    grp = trip.loc[:, 'start_time'].groupby(trip.loc[:, 'start_time']).count()
+    plt.figure(1, figsize=(16, 6), dpi=100)
+    plt.xlabel('Start Time in A Day')
+    plt.ylabel('Number of Rentals')
+    plt.title('Rentals vs Start Time')
+    plt.plot(grp.index, grp.values)
+    plt.show()
+
+
 if __name__ == '__main__':
     '''
     Datasets and code should be put in the same folder
     '''
     visualization_gas_price()
-    visualization_duration()
+    # visualization_duration()
+    visualization_start_time()
