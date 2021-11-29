@@ -3,6 +3,7 @@ import pandas as pd
 import time
 import holoviews as hv
 import bokeh
+from weather import weekday_or_weekend
 import matplotlib.pyplot as plt
 hv.extension('bokeh', 'matplotlib')
 
@@ -65,10 +66,23 @@ def visualization_gas_price():
     sort_rental_num = rental_num.sort_values(by=['date'])
     sort_rental_num.loc[:,'date'] = sort_rental_num.loc[:,'date'].map(inv_rental_num_date_format)
     rental_num = pd.Series(data=list(sort_rental_num.loc[:,'id']), index=list(sort_rental_num.loc[:,'date']))
-    gas_rental = pd.DataFrame(data={'rental_num':list(rental_num),'gas_price':list(gas_price_everyday)}, index=gas_price_everyday.index)
-    plot1 = hv.Scatter(gas_rental, 'gas_price', 'rental_num')\
-        .options(width=1000,height=500,color='#1f77b4',size=2, title="Relatonship between Number of Rentals and Gas Price (Dollars per Gallon)")
-    bokeh.plotting.show(hv.render(plot1))
+    gas_rental = pd.DataFrame(data={'rental_num':list(rental_num),'gas_price':list(gas_price_everyday),'date':gas_price_everyday.index}, index=gas_price_everyday.index)
+    x = pd.DataFrame(gas_rental)
+    x.loc[:, 'date'] = gas_rental.loc[:, 'date'].map(weekday_or_weekend)
+    weekday = gas_rental[x.date==0]
+    weekend = gas_rental[x.date==1]
+    plt.style.use("bmh")
+    plt.figure(figsize=(15, 6), dpi=100)
+    plt.plot(weekday['gas_price'], weekday['rental_num'], 'o', label='weekday', alpha=0.8)
+    plt.plot(weekend['gas_price'], weekend['rental_num'], 'o', label='weekend', alpha=0.8)
+    plt.ylabel('Number of Rentals')
+    plt.xlabel('Gas Price (Dollars per Gallon)')
+    plt.title('Relationship between Number of Rentals and Gas Price')
+    plt.legend()
+    plt.show()
+    # plot1 = hv.Scatter(gas_rental, 'gas_price', 'rental_num')\
+    #     .options(width=1000,height=500,color='#1f77b4',size=2, title="Relatonship between Number of Rentals and Gas Price (Dollars per Gallon)")
+    # bokeh.plotting.show(hv.render(plot1))
 
 def visualization_duration():
     '''
