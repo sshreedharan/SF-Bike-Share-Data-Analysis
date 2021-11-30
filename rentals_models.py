@@ -116,6 +116,8 @@ def mutual_info_scores(X,Y):
     # Visualize MI scores
     plt.figure()
     mi_scores.plot.barh(title='Mutual Information Scores',figsize=(10,8))
+    plt.xlabel('Scores',fontsize=16)
+    plt.ylabel('Features',fontsize=16)
     plt.show()
 
 
@@ -327,6 +329,7 @@ def predict_data(reg,X,scaler,visual):
         dif2 = df_newcase['Mean']-df_newcase['Min']
         df_try = pd.DataFrame({'Min':df_newcase['Min'],'Mean':dif2,'Max':dif1},
                     index=['TEMP','DWPNT','HUM','SLP','VIS','Wind_S','Gust_S'])
+        print('If the weather of a weekday is')
         df_try.plot.bar(stacked=True,figsize=(10,8),
                     color=['lightsteelblue','cornflowerblue','royalblue'],
                     rot=0, title='Weather Information')
@@ -336,6 +339,8 @@ def predict_data(reg,X,scaler,visual):
             fontsize=16)
         plt.xticks(fontsize=16)
         plt.yticks(fontsize=16)
+        plt.xlabel('Weather',fontsize=16)
+        plt.ylabel('Values',fontsize=16)
         plt.legend(prop={'size': 16})
         plt.show()
     print('then the predicted number of daily rentals is',
@@ -389,9 +394,8 @@ def full_model(df_trip, df_weather, visual, less_features):
 
 
 ### EXAMPLE ###
-'''
+
 plt.style.use('bmh')
 df_trip = pd.read_csv('dataset_bike_share/trip.csv')
 df_weather = pd.read_csv('dataset_bike_share/weather.csv')
 full_model(df_trip,df_weather,visual=True,less_features=False)
-'''
