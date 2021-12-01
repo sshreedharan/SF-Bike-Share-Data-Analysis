@@ -66,18 +66,19 @@ def monthly_avg_duration(data):
         data (pd.DataFrame) preprocessed trip data
     This function computes monthly average duration from preprocessed data and visualizes the data with a line chart
     """
+    pd.options.mode.chained_assignment = None
     mean_m = pd.DataFrame(data[['month-yr','duration']])
     mean_m = mean_m.groupby('month-yr', as_index = False).mean()
     mean_m = mean_m.sort_values('month-yr')
     mean_m['duration'] = mean_m['duration']//60
-    
+
     year1 = mean_m[(mean_m['month-yr'] >= '2013-09') & (mean_m['month-yr'] <= '2014-08')]
     year2 = mean_m[(mean_m['month-yr'] > '2014-08') & (mean_m['month-yr'] <= '2015-08')]
     year1['month'] = year1['month-yr'].str.split('-',expand = True)[1]
     year2['month'] = year2['month-yr'].str.split('-',expand = True)[1]
-    
+
     months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
-    
+
     plt.figure(1,dpi = 100)
     plt.plot(months,year1['duration'], label = 'Sep 2013 - Aug 2014')
     plt.plot(months,year2['duration'],label = 'Sep 2014 - Aug 2015')
@@ -85,7 +86,7 @@ def monthly_avg_duration(data):
     plt.ylabel('Average Trip Duration (Minutes)')
     plt.title('Average Trip Duration Taken from Sep 2013 - Aug 2015')
     plt.legend()
-    
+
     plt.show()
 
 
@@ -100,7 +101,7 @@ def dayofweek_avg_duration(data):
     mean_dow = mean_dow.groupby('s_dayofweek', as_index = False).mean()
     mean_dow = mean_dow.sort_values('s_dayofweek')
     mean_dow['duration'] = mean_dow['duration']//60
-    
+
     days = ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     plt.figure(1,dpi = 100)
     plt.bar(days,mean_dow['duration'], width = 0.5)
@@ -127,7 +128,7 @@ def hourly_avg_duration(data):
     plt.plot(mean_h['s_time'],mean_h['duration'],'o--')
     plt.ylabel('Average Trip Duration (minutes)')
     plt.xlabel('Start Time (hour)')
-    
+
     plt.xlim(right = 24)
     plt.title('Hourly Average Trip Duration (minutes) Aggravated Based on Start Time')
     plt.show()
@@ -170,7 +171,7 @@ def dayofweek_trip_count_vs(data):
     d_sub_cnt = pd.DataFrame(d_sub_cnt.groupby('s_dayofweek',as_index=False).size())
     d_cus_cnt = pd.DataFrame(d_cus_cnt.groupby('s_dayofweek',as_index=False).size())
     days = ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    
+
     plt.figure(1,dpi = 100)
     plt.plot(days,d_sub_cnt['size']/1000,'o--',label = 'subscriber')
     plt.plot(days,d_cus_cnt['size']/1000,'o--',label = 'customer')
@@ -220,7 +221,7 @@ def dayofweek_avg_duration_vs(data):
     d_sub_dur['duration'] = d_sub_dur['duration']//60
     d_cus_dur['duration'] = d_cus_dur['duration']//60
     days = ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    
+
     plt.figure(1,dpi = 100)
     plt.plot(days,d_sub_dur['duration'],'o--',label = 'subscriber')
     plt.plot(days,d_cus_dur['duration'],'o--',label = 'customer')
@@ -247,18 +248,18 @@ def m_pop_s_station(trip,station):
     for i in range(1,7):
         tmp = pop_s_day[pop_s_day['s_dayofweek']==i].nlargest(5,'size')
         pop_s_wk = pd.concat([pop_s_wk,tmp])
-    
+
     station = station[['name','lat','long']]
     station = station.rename(columns={'name':'start_station_name'})
     pop_s_wk = pd.merge(station,pop_s_wk,on='start_station_name',how = 'right')
-    
+
     # convert latitude and longitude to mercator coordinates
     pop_s_wk['x'] = np.radians(pop_s_wk['long'])*6378137
     pop_s_wk['y'] = 180/np.pi*np.log(np.tan(np.pi/4+pop_s_wk['lat']*(np.pi/180)/2))*pop_s_wk['x']/pop_s_wk['long']
-    
+
     # circle radius defined by trip count
     pop_s_wk['radius'] = pop_s_wk['size']//10
-    
+
     output_file("tile.html")
 
     tile_provider = get_provider(CARTODBPOSITRON)
