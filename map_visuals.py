@@ -8,7 +8,7 @@ from preprocessing import merge_data
 from bokeh.io import curdoc, output_notebook
 from bokeh.plotting import figure, ColumnDataSource, show
 from bokeh.tile_providers import get_provider
-from bokeh.palettes import PRGn, RdYlGn, Category20
+from bokeh.palettes import PRGn, RdYlGn, Category20, Blues
 from bokeh.transform import linear_cmap
 from bokeh.layouts import column
 from bokeh.models import ColorBar, NumeralTickFormatter
@@ -147,7 +147,7 @@ def station_map_visual():
 
     print("Creating Map.")
     chosentile = get_provider('CARTODBPOSITRON_RETINA')
-    palette = Category20[17]
+    palette = Blues[9]
     source = ColumnDataSource(data=coord_df)
     color_mapper = linear_cmap(field_name = 'dock_count', palette = palette, low = coord_df['dock_count'].min(), high = coord_df['dock_count'].max())
 
@@ -165,7 +165,7 @@ def station_map_visual():
     print("Creating color bar for reference.")
     color_bar = ColorBar(color_mapper=color_mapper['transform'],
                      formatter = NumeralTickFormatter(format='0.0[0000]'),
-                     label_standoff = 13, width=17, location=(0,0))
+                     label_standoff = 13, width=17, location=(0,0), title = 'Dock Count', title_text_align = 'left')
     p.add_layout(color_bar, 'right')
     print("Color bar created.")
 
@@ -272,7 +272,7 @@ def seasonal_bike_availability():
 
     print("Creating Map.")
     chosentile = get_provider('CARTODBPOSITRON_RETINA')
-    palette = Category20[17]
+    palette = Blues[9]
     color_mapper = linear_cmap(field_name = 'bikes_available', palette = palette, low = source_df['bikes_available'].min(), high = source_df['bikes_available'].max())
 
     tooltips = [("Station Name","@name"), ("City","@city"), ("Bikes Available","@bikes_available")]
@@ -290,7 +290,7 @@ def seasonal_bike_availability():
     print("Creating color bar for reference.")
     color_bar = ColorBar(color_mapper=color_mapper['transform'],
                      formatter = NumeralTickFormatter(format='0.0[0000]'),
-                     label_standoff = 13, width=17, location=(0,0))
+                     label_standoff = 13, width=17, location=(0,0), title = 'Bikes Available', title_text_align = 'left')
     p.add_layout(color_bar, 'right')
     print("Color bar created.")
 
