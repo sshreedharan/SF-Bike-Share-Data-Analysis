@@ -315,6 +315,7 @@ def predict_data(reg,X,scaler,visual):
     np.random.seed(seed=42)
     idx = int(np.random.rand()*len(X))
     rand_row = X.iloc[idx,]
+    # rand_row[-1] = 1
 
     # Prediction
     rand_pred = reg.predict(scaler.transform(np.array(rand_row).reshape(1,-1)))
@@ -335,7 +336,7 @@ def predict_data(reg,X,scaler,visual):
                     rot=0, title='Weather Information')
 
         plt.text(y=55,x=3,
-            s='cloud_cover=2.6\nwind_dir_degree=309.8\nweekend=False',
+            s='cloud_cover=2.6\nwind_dir_degree=309.8',
             fontsize=16)
         plt.xticks(fontsize=16)
         plt.yticks(fontsize=16)
@@ -394,8 +395,9 @@ def full_model(df_trip, df_weather, visual, less_features):
 
 
 ### EXAMPLE ###
-
+'''
 plt.style.use('bmh')
 df_trip = pd.read_csv('dataset_bike_share/trip.csv')
 df_weather = pd.read_csv('dataset_bike_share/weather.csv')
 full_model(df_trip,df_weather,visual=True,less_features=False)
+'''
