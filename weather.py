@@ -89,6 +89,8 @@ def visualization_weather():
         plt.plot(weekend[var],weekend['num_rental'],'o',label='weekend',alpha=0.8)
         plt.ylabel('Number of Rentals')
         plt.xlabel(var_dict[var])
+        plt.title(f'Rentals vs {var_dict[var]}')
+        # plt.savefig(f"./images/weather/{var_dict[var]}.png")
         plt.legend()
     plt.show()
     # plot1 = hv.Scatter(new_weather, 'mean_temperature_f', 'num_rental')\

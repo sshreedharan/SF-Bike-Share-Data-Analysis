@@ -72,7 +72,7 @@ def visualization_gas_price():
     weekday = gas_rental[x.date==0]
     weekend = gas_rental[x.date==1]
     plt.style.use("bmh")
-    plt.figure(figsize=(15, 6), dpi=100)
+    plt.figure(figsize=(6.5, 5), dpi=100)
     plt.plot(weekday['gas_price'], weekday['rental_num'], 'o', label='weekday', alpha=0.8)
     plt.plot(weekend['gas_price'], weekend['rental_num'], 'o', label='weekend', alpha=0.8)
     plt.ylabel('Number of Rentals')
@@ -84,7 +84,7 @@ def visualization_gas_price():
     #     .options(width=1000,height=500,color='#1f77b4',size=2, title="Relatonship between Number of Rentals and Gas Price (Dollars per Gallon)")
     # bokeh.plotting.show(hv.render(plot1))
 
-def visualization_duration():
+def visualization_start_time_duration():
     '''
     this function is used to visualize the relationship between Start Time and Duration
     :return: None
@@ -103,7 +103,7 @@ def visualization_duration():
     plt.title('Relationship between Start Time and Duration')
     plt.show()
 
-def visualization_start_time():
+def visualization_duration():
     '''
     this function is used to visualize the relationship between Start Time and Rentals
     :return: None
@@ -125,5 +125,4 @@ if __name__ == '__main__':
     Datasets and code should be put in the same folder
     '''
     visualization_gas_price()
-    # visualization_duration()
-    visualization_start_time()
+    visualization_duration()
