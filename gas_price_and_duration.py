@@ -57,11 +57,11 @@ def visualization_gas_price():
     this function is used to visualize the relationship between Number of Rentals and Gas Price
     :return: None
     '''
-    gas_price_df = pd.read_csv('Weekly_San_Francisco_CA_Regular_Reformulated_Retail_Gasoline_Prices.csv')
+    gas_price_df = pd.read_csv('dataset_bike_share/Weekly_San_Francisco_CA_Regular_Reformulated_Retail_Gasoline_Prices.csv')
     gas_price = pd.Series(list(gas_price_df.loc[:,'price']),index=gas_price_df.loc[:,'date'].map(weather_date_format))
     dates = (pd.date_range('20130826', periods=736)).map(date_range_convert)
     gas_price_everyday = gas_price.reindex(dates).interpolate().iloc[3:]
-    rental_num = pd.read_csv('rental_count_everyday.csv')
+    rental_num = pd.read_csv('dataset_bike_share/rental_count_everyday.csv')
     rental_num.loc[:,'date'] = rental_num.loc[:,'date'].map(rental_num_date_format)
     sort_rental_num = rental_num.sort_values(by=['date'])
     sort_rental_num.loc[:,'date'] = sort_rental_num.loc[:,'date'].map(inv_rental_num_date_format)
@@ -109,7 +109,7 @@ def visualization_duration():
     :return: None
     '''
     plt.style.use("bmh")
-    trip = pd.read_csv('trip.csv')
+    trip = pd.read_csv('dataset_bike_share/trip.csv')
     trip.loc[:, 'start_time'] = trip.loc[:, 'start_date'].map(trip_date_convert)
     grp = trip.loc[:, 'start_time'].groupby(trip.loc[:, 'start_time']).count()
     plt.figure(1, figsize=(16, 6), dpi=100)
@@ -122,7 +122,7 @@ def visualization_duration():
 
 if __name__ == '__main__':
     '''
-    Datasets and code should be put in the same folder
+    Datasets should be put in the 'dataset_bike_share' folder
     '''
     visualization_gas_price()
     visualization_duration()

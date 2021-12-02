@@ -27,6 +27,7 @@ def preprocessing(data):
     return data
 
 # mean duration daily
+# not included in presentation
 def daily_avg_duration(data):
     """
     Args:
@@ -58,21 +59,36 @@ def daily_avg_duration(data):
     plt.show()
 
 # mean duration monthly
+# not included in presentation
 def monthly_avg_duration(data):
     """
     Args:
         data (pd.DataFrame) preprocessed trip data
     This function computes monthly average duration from preprocessed data and visualizes the data with a line chart
     """
+    pd.options.mode.chained_assignment = None
     mean_m = pd.DataFrame(data[['month-yr','duration']])
     mean_m = mean_m.groupby('month-yr', as_index = False).mean()
     mean_m = mean_m.sort_values('month-yr')
     mean_m['duration'] = mean_m['duration']//60
-    plt.figure(1,figsize = (24,8),dpi = 100)
-    plt.plot(mean_m['month-yr'],mean_m['duration'],'o--')
 
-    plt.title('Monthly Average Trip Duration (minutes)')
+    year1 = mean_m[(mean_m['month-yr'] >= '2013-09') & (mean_m['month-yr'] <= '2014-08')]
+    year2 = mean_m[(mean_m['month-yr'] > '2014-08') & (mean_m['month-yr'] <= '2015-08')]
+    year1['month'] = year1['month-yr'].str.split('-',expand = True)[1]
+    year2['month'] = year2['month-yr'].str.split('-',expand = True)[1]
+
+    months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
+
+    plt.figure(1,dpi = 100)
+    plt.plot(months,year1['duration'], label = 'Sep 2013 - Aug 2014')
+    plt.plot(months,year2['duration'],label = 'Sep 2014 - Aug 2015')
+    plt.xlabel('Month')
+    plt.ylabel('Average Trip Duration (Minutes)')
+    plt.title('Average Trip Duration Taken from Sep 2013 - Aug 2015')
+    plt.legend()
+
     plt.show()
+
 
 # mean duration day of week
 def dayofweek_avg_duration(data):
@@ -85,11 +101,17 @@ def dayofweek_avg_duration(data):
     mean_dow = mean_dow.groupby('s_dayofweek', as_index = False).mean()
     mean_dow = mean_dow.sort_values('s_dayofweek')
     mean_dow['duration'] = mean_dow['duration']//60
-    plt.figure(1,figsize = (24,8),dpi = 100)
-    plt.bar(mean_dow['s_dayofweek'],mean_dow['duration'], width = 0.5)
 
+    days = ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    plt.figure(1,dpi = 100)
+    plt.bar(days,mean_dow['duration'], width = 0.5)
+    plt.xticks(range(7), days)
+    plt.ylabel('Average Trip Duration (minutes)')
+    plt.xlabel('Day of Week')
     plt.title('Average Trip Duration (minutes) Day of Week')
     plt.show()
+
+
 
 # mean duration hourly
 def hourly_avg_duration(data):
@@ -102,13 +124,17 @@ def hourly_avg_duration(data):
     mean_h = mean_h.groupby('s_time',as_index = False).mean()
     mean_h = mean_h.sort_values('s_time')
     mean_h['duration'] = mean_h['duration']//60
-    plt.figure(1,figsize = (24,8),dpi = 100)
+    plt.figure(1,dpi = 100)
     plt.plot(mean_h['s_time'],mean_h['duration'],'o--')
+    plt.ylabel('Average Trip Duration (minutes)')
+    plt.xlabel('Start Time (hour)')
 
-    plt.title('Hourly Average Trip Duration (minutes)')
+    plt.xlim(right = 24)
+    plt.title('Hourly Average Trip Duration (minutes) Aggravated Based on Start Time')
     plt.show()
 
 # monthly subscriber vs customer trip count
+# not included in presentation
 def monthly_trip_count_vs(data):
     """
     Args:
@@ -144,14 +170,20 @@ def dayofweek_trip_count_vs(data):
     d_cus_cnt = pd.DataFrame(cus['s_dayofweek'])
     d_sub_cnt = pd.DataFrame(d_sub_cnt.groupby('s_dayofweek',as_index=False).size())
     d_cus_cnt = pd.DataFrame(d_cus_cnt.groupby('s_dayofweek',as_index=False).size())
-    plt.figure(1,figsize = (16,6),dpi = 100)
-    plt.plot(d_sub_cnt['s_dayofweek'],d_sub_cnt['size'],'o--',label = 'subscriber')
-    plt.plot(d_cus_cnt['s_dayofweek'],d_cus_cnt['size'],'o--',label = 'customer')
+    days = ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    plt.figure(1,dpi = 100)
+    plt.plot(days,d_sub_cnt['size']/1000,'o--',label = 'subscriber')
+    plt.plot(days,d_cus_cnt['size']/1000,'o--',label = 'customer')
+    plt.ylabel('Number of Trips (thousands)')
+    plt.xlabel('Day of Week')
     plt.legend()
     plt.title('Day of Week Trip Count Subscriber vs Customer')
     plt.show()
 
+
 # subscriber vs customer: avg duration monthly
+# not included in presentation
 def monthly_avg_duration_vs(data):
     """
     Args:
@@ -188,9 +220,13 @@ def dayofweek_avg_duration_vs(data):
     d_cus_dur = pd.DataFrame(d_cus_dur.groupby('s_dayofweek',as_index=False).mean())
     d_sub_dur['duration'] = d_sub_dur['duration']//60
     d_cus_dur['duration'] = d_cus_dur['duration']//60
-    plt.figure(1,figsize = (16,6),dpi = 100)
-    plt.plot(d_sub_dur['s_dayofweek'],d_sub_dur['duration'],'o--',label = 'subscriber')
-    plt.plot(d_cus_dur['s_dayofweek'],d_cus_dur['duration'],'o--',label = 'customer')
+    days = ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    plt.figure(1,dpi = 100)
+    plt.plot(days,d_sub_dur['duration'],'o--',label = 'subscriber')
+    plt.plot(days,d_cus_dur['duration'],'o--',label = 'customer')
+    plt.ylabel('Trip Duration (minutes)')
+    plt.xlabel('Day of Week')
     plt.legend()
     plt.title('Day of Week Trip Duration Subscriber vs Customer')
     plt.show()
@@ -236,9 +272,8 @@ def m_pop_s_station(trip,station):
     source1 = ColumnDataSource(pop_s_wk[pop_s_wk['s_dayofweek']<5]) # weekday
     source2 = ColumnDataSource(pop_s_wk[pop_s_wk['s_dayofweek']>=5]) # weekend
 
-    p.circle(x="x", y="y", size=10, fill_color="yellow", fill_alpha=0.4, radius = 'radius', source=source1)
-    p.circle(x="x", y="y", size=10, fill_color="red", fill_alpha=0.4, radius = 'radius', source=source2)
+    p.circle(x="x", y="y", size=10, fill_color="yellow", fill_alpha=0.4, radius = 'radius', source=source1, legend_label='weekday')
+    p.circle(x="x", y="y", size=10, fill_color="red", fill_alpha=0.4, radius = 'radius', source=source2,legend_label='weekend')
 
-    output_notebook()
     show(p)
     return pop_s_wk
